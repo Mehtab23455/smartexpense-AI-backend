@@ -3,11 +3,12 @@ from pathlib import Path
 from decouple import config, Csv
 from datetime import timedelta
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
+
 
 INSTALLED_APPS = [
     # Django
@@ -27,6 +28,9 @@ INSTALLED_APPS = [
     "expenses",
     "ml",
 ]
+
+AUTH_USER_MODEL = 'users.User'
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -98,6 +102,9 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
+
+
+
 # DRF + JWT
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -110,11 +117,16 @@ REST_FRAMEWORK = {
 
 # Simple JWT settings (tokens lifetimes - tweak as needed)
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+AUTH_USER_MODEL = 'users.User'
 
 # Email backend for dev (prints emails to console)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@smartexpense.local")
+
+ALLOWED_HOSTS = ["*", "127.0.0.1", "localhost", "testserver"]
+
+

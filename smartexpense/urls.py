@@ -38,6 +38,9 @@ urlpatterns = [
 
     # expenses
     path("api/expenses/", include("expenses.urls")),
+
+    path('api/analytics/', include('analytics.urls')),
+
 ]
 
 if settings.DEBUG:

@@ -1,8 +1,13 @@
-# expenses/urls.py
-from django.urls import path
-from .views import ExpenseListCreateView, ExpenseRetrieveView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ExpenseViewSet
+from .views import upload_receipt
+
+
+router = DefaultRouter()
+router.register(r"", ExpenseViewSet, basename="expenses")
 
 urlpatterns = [
-    path("", ExpenseListCreateView.as_view(), name="expense_list_create"),
-    path("<int:pk>/", ExpenseRetrieveView.as_view(), name="expense_detail"),
+    path("", include(router.urls)),
+    path('upload/receipt/', upload_receipt, name='upload_receipt'),
 ]
