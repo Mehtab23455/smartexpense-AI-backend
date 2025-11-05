@@ -1,9 +1,16 @@
 from django.urls import path
-from .views import RegisterView, LoginView, LogoutView, CurrentUserView, RequestPasswordResetView, PasswordResetConfirmView
-from .views import register_user
+from .views import (
+    RegisterView,
+    LoginView,
+    LogoutView,
+    CurrentUserView,
+    RequestPasswordResetView,
+    PasswordResetConfirmView,
+    register_user,
+)
 
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name='register'),
+    path('register/', register_user, name='register_user'),  # changed to function-based view
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('me/', CurrentUserView.as_view(), name='current-user'),

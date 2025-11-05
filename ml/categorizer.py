@@ -1,24 +1,31 @@
 # ml/categorizer.py
+import os
+import joblib
 import re
 
-def categorize_expense(merchant_name, raw_text):
-    """
-    Simple keyword-based categorization of expenses.
-    You can later replace this with an ML model.
-    """
-    merchant_name = (merchant_name or "").lower()
-    text = (raw_text or "").lower()
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "ml_model.pkl")
 
-    # Keyword-based rules
-    if re.search(r'(domino|pizza|kfc|burger|restaurant|food|meal)', merchant_name + text):
+def categorize_expense(merchant, raw_text):
+    """
+    Predict category using the trained model.
+    Fallback to simple keyword-based rules if model not available.
+    """
+    text = f"{merchant} {raw_text}".lower()
+
+    # Try ML model
+    if os.path.exists(MODEL_PATH):
+        vectorizer, model = joblib.load(MODEL_PATH)
+        X = vectorizer.transform([text])
+        return model.predict(X)[0]
+
+    # Fallback rules
+    if "pizza" in text or "domino" in text or "restaurant" in text:
         return "Food & Dining"
-    elif re.search(r'(uber|ola|taxi|bus|train|flight|travel)', text):
-        return "Travel"
-    elif re.search(r'(amazon|flipkart|shopping|mall|store)', text):
+    if "uber" in text or "ola" in text or "fuel" in text:
+        return "Transport"
+    if "amazon" in text or "flipkart" in text:
         return "Shopping"
-    elif re.search(r'(electricity|water|internet|bill|gas)', text):
+    if "electricity" in text or "wifi" in text:
         return "Utilities"
-    elif re.search(r'(movie|netflix|entertainment|ticket)', text):
-        return "Entertainment"
-    else:
-        return "Others"
+
+    return "Miscellaneous"

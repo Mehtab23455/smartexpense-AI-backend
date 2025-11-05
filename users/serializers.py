@@ -1,24 +1,51 @@
-# users/serializers.py
-from django.contrib.auth.models import User
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth import authenticate
+from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "email", "first_name", "last_name")
+        fields = ("id", "username", "email", "full_name")
+
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    username = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        user = authenticate(username=data["username"], password=data["password"])
-        if user and user.is_active:
-            return user
-        raise serializers.ValidationError("Invalid credentials or inactive account.")
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
+
+        if not password:
+            raise serializers.ValidationError("Password is required.")
+
+        # Fetch user by email or username
+        user = None
+        if email:
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                raise serializers.ValidationError("No account with this email.")
+        elif username:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                raise serializers.ValidationError("No account with this username.")
+        else:
+            raise serializers.ValidationError("Email or username is required.")
+
+        # Check password
+        if not user.check_password(password):
+            raise serializers.ValidationError("Incorrect password.")
+
+        if not user.is_active:
+            raise serializers.ValidationError("Inactive account.")
+
+        return user
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -26,7 +53,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("username", "email", "password", "password2", "first_name", "last_name")
+        fields = ("username", "email", "full_name", "password", "password2")
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password2"]:
@@ -36,10 +63,9 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("password2")
         user = User.objects.create_user(
+            email=validated_data["email"],
             username=validated_data["username"],
-            email=validated_data.get("email", ""),
-            first_name=validated_data.get("first_name", ""),
-            last_name=validated_data.get("last_name", ""),
             password=validated_data["password"],
+            full_name=validated_data.get("full_name", ""),
         )
         return user
